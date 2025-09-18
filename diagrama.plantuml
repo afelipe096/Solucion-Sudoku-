@@ -1,0 +1,188 @@
+@startuml
+!theme plain
+skinparam backgroundColor #f8f9fa
+skinparam activity {
+    BackgroundColor #e3f2fd
+    BorderColor #1976d2
+    FontSize 11
+}
+skinparam decision {
+    BackgroundColor #fff3e0
+    BorderColor #f57c00
+}
+skinparam partition {
+    BorderColor #4caf50
+    BackgroundColor #f1f8e9
+}
+
+start
+:📋 **INICIO DEL PROGRAMA**;
+note right: Inicializar tablero 4x4 con números del 1-16
+
+:🖨️ Imprimir tablero inicial con formato;
+note left
+  Mostrar:
+  - Celdas vacías como "?"
+  - Sumas objetivo por fila/columna
+end note
+
+:📊 Imprimir sumas requeridas
+(filas y columnas);
+
+:✅ Marcar números ya colocados
+en array 'used[1..16]';
+note right: Evitar duplicados desde el inicio
+
+if (🔍 solve(0, 0)) then (✅ **SOLUCIÓN ENCONTRADA**)
+    :🎉 Imprimir "¡Sudoku resuelto!";
+    :🖨️ Imprimir tablero completo;
+    :🔍 Ejecutar verificación completa;
+    
+    partition "**VERIFICACIÓN FINAL**" {
+        :Verificar sumas de todas las filas;
+        :Verificar sumas de todas las columnas;
+        :Verificar que números 1-16 estén únicos;
+        
+        if (✅ Todas las verificaciones pasaron) then (Sí)
+            :🏆 Imprimir "SUDOKU COMPLETAMENTE RESUELTO";
+        else (No)
+            :❌ Imprimir errores encontrados;
+        endif
+    }
+else (❌ **NO HAY SOLUCIÓN**)
+    :😞 Imprimir "No se encontró solución";
+    :🖨️ Imprimir tablero parcial para depuración;
+endif
+
+:🔚 **FIN DEL PROGRAMA**;
+stop
+
+' ===== FUNCIÓN RECURSIVA SOLVE =====
+partition "**🔄 FUNCIÓN solve(row, col)**" {
+    start
+    :📍 **Entrada**: posición (row, col);
+    
+    if (🏁 row == 4?) then (**SÍ - FIN DEL TABLERO**)
+        :🎯 ¡Tablero completo!;
+        :↩️ return **true**;
+        stop
+    else (**NO - CONTINUAR**)
+        :🧮 Calcular siguiente posición:
+        nextRow, nextCol;
+        note right
+          Si col == 3: nextRow = row+1, nextCol = 0
+          Sino: nextRow = row, nextCol = col+1
+        end note
+        
+        if (🔢 board[row][col] != 0?) then (**CELDA OCUPADA**)
+            :⏭️ Celda ya tiene número;
+            :🔄 return solve(nextRow, nextCol);
+            stop
+        else (**CELDA VACÍA**)
+            :🎲 **PROBAR NÚMEROS 1 a 16**;
+            
+            while (🔢 num = 1 to 16) is (**HAY NÚMEROS**)
+                if (❓ !used[num] && canPlaceNumber(row,col,num)?) then (**NÚMERO VÁLIDO**)
+                    :✏️ **COLOCAR NÚMERO**:
+                    board[row][col] = num
+                    used[num] = true;
+                    
+                    partition "**🔍 VALIDACIONES INTERMEDIAS**" {
+                        :🏁 isValid = true;
+                        
+                        if (📏 col == 3?) then (**ÚLTIMA COLUMNA**)
+                            :➕ Calcular suma de fila completa;
+                            if (suma == rowSum[row]?) then (Sí)
+                                :✅ Suma de fila correcta;
+                            else (No)
+                                :❌ isValid = false;
+                            endif
+                        endif
+                        
+                        if (📐 row == 3?) then (**ÚLTIMA FILA**)
+                            :➕ Calcular suma de columna completa;
+                            if (suma == colSum[col]?) then (Sí)
+                                :✅ Suma de columna correcta;
+                            else (No)
+                                :❌ isValid = false;
+                            endif
+                        endif
+                    }
+                    
+                    if (✅ isValid?) then (**VÁLIDO**)
+                        :🔄 Llamada recursiva:
+                        solve(nextRow, nextCol);
+                        
+                        if (🎯 Recursión exitosa?) then (**SÍ**)
+                            :🏆 ¡Solución encontrada!;
+                            :↩️ return **true**;
+                            stop
+                        endif
+                    endif
+                    
+                    :🔙 **BACKTRACK**:
+                    board[row][col] = 0
+                    used[num] = false;
+                    note left: Deshacer cambios y probar siguiente número
+                    
+                else (**NÚMERO INVÁLIDO**)
+                    :⏭️ Probar siguiente número;
+                endif
+            endwhile (**NO HAY MÁS NÚMEROS**)
+            
+            :💥 Ningún número funcionó;
+            :↩️ return **false**;
+            stop
+        endif
+    endif
+}
+
+' ===== FUNCIÓN canPlaceNumber =====
+partition "**🎯 FUNCIÓN canPlaceNumber(row, col, num)**" {
+    start
+    :📍 **Verificar si se puede colocar número**;
+    
+    partition "**📏 VERIFICACIÓN DE FILA**" {
+        :➕ Calcular suma parcial de fila;
+        :🔢 Contar celdas vacías en fila;
+        
+        if (🏁 Solo queda 1 celda vacía?) then (**ÚLTIMA CELDA DE FILA**)
+            if (suma + num == rowSum[row]?) then (Sí)
+                :✅ Suma exacta para fila;
+            else (No)
+                :❌ return false;
+                stop
+            endif
+        else (**HAY MÁS CELDAS**)
+            if (suma + num > rowSum[row]?) then (**EXCEDE LÍMITE**)
+                :❌ return false;
+                stop
+            endif
+        endif
+    }
+    
+    partition "**📐 VERIFICACIÓN DE COLUMNA**" {
+        :➕ Calcular suma parcial de columna;
+        :🔢 Contar celdas vacías en columna;
+        
+        if (🏁 Solo queda 1 celda vacía?) then (**ÚLTIMA CELDA DE COLUMNA**)
+            if (suma + num == colSum[col]?) then (Sí)
+                :✅ Suma exacta para columna;
+            else (No)
+                :❌ return false;
+                stop
+            endif
+        else (**HAY MÁS CELDAS**)
+            if (suma + num > colSum[col]?) then (**EXCEDE LÍMITE**)
+                :❌ return false;
+                stop
+            endif
+        endif
+    }
+    
+    :✅ Número se puede colocar;
+    :↩️ return **true**;
+    stop
+}
+
+@enduml
