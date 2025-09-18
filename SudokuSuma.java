@@ -75,7 +75,9 @@ public class SudokuSuma{
         
         // Prueba todos los números del 1 al 16 para esta celda
         for (int num = 1; num <= 16; num++) {
-            // Si el número no está usado y se puede poner aquí según las reglas
+            // RESTRICCIONES PRINCIPALES:
+            // 1. El número no debe estar repetido en el tablero (used[num] == false)
+            // 2. El número debe cumplir con las sumas parciales de la fila y columna (canPlaceNumber)
             if (!used[num] && canPlaceNumber(row, col, num)) {
                 board[row][col] = num; // Pon el número en la celda
                 used[num] = true;      // Márcalo como usado
@@ -104,6 +106,7 @@ public class SudokuSuma{
     
     // Función que verifica si se puede poner un número en la celda sin pasarse de la suma
     static boolean canPlaceNumber(int row, int col, int num) {
+        // RESTRICCIÓN: La suma parcial de la fila no debe exceder la suma objetivo
         // Verifica suma parcial de la fila
         int rowSum = 0;
         int emptyCellsInRow = 0;
@@ -117,14 +120,16 @@ public class SudokuSuma{
         int newRowSum = rowSum + num;
         // Si es la última celda vacía en la fila, la suma debe ser exacta
         if (emptyCellsInRow == 1) {
+            // RESTRICCIÓN: La suma de la fila debe ser igual a la suma objetivo
             if (newRowSum != SudokuSuma.rowSum[row]) {
                 return false;
             }
         } else if (newRowSum > SudokuSuma.rowSum[row]) {
-            // Si la suma parcial se pasa, no se puede poner el número
+            // RESTRICCIÓN: No se puede exceder la suma objetivo de la fila
             return false;
         }
         
+        // RESTRICCIÓN: La suma parcial de la columna no debe exceder la suma objetivo
         // Verifica suma parcial de la columna
         int colSum = 0;
         int emptyCellsInCol = 0;
@@ -136,13 +141,14 @@ public class SudokuSuma{
             }
         }
         int newColSum = colSum + num;
-        // Si es la última celda vacía en la 23 , la suma debe ser exacta
+        // Si es la última celda vacía en la columna, la suma debe ser exacta
         if (emptyCellsInCol == 1) {
+            // RESTRICCIÓN: La suma de la columna debe ser igual a la suma objetivo
             if (newColSum != SudokuSuma.colSum[col]) {
                 return false;
             }
         } else if (newColSum > SudokuSuma.colSum[col]) {
-            // Si la suma parcial se pasa, no se puede poner el número
+            // RESTRICCIÓN: No se puede exceder la suma objetivo de la columna
             return false;
         }
         // Si pasa todas las verificaciones, se puede poner el número
